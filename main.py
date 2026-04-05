@@ -385,12 +385,6 @@ def main(page: ft.Page):
             ]
             page.update()
 
-        def on_tab(e):
-            state["tab"] = e.control.selected_index
-            tab1_row.visible = (state["tab"] == 0)
-            tab2_row.visible = (state["tab"] == 1)
-            page.update()
-
         def on_app(e):
             state["app"] = e.control.value
             refresh()
@@ -421,14 +415,35 @@ def main(page: ft.Page):
             ),
         )
 
-        tabs_bar = ft.Tabs(
-            length=2, selected_index=0,
-            animation_duration=200, on_change=on_tab,
-            content=[
-                ft.Tab(label="CUADRO DE MANDO 1"),
-                ft.Tab(label="CUADRO DE MANDO 2"),
-            ],
+        # Custom tab bar — no ft.Tabs (avoids "Tab content must be provided" error)
+        tab_btn_1 = ft.Container(
+            content=ft.Text("CUADRO DE MANDO 1", size=12, weight=ft.FontWeight.BOLD,
+                            color="white"),
+            bgcolor=C_BLUE, border_radius=8,
+            padding=ft.Padding(18, 10, 18, 10),
+            on_click=lambda e: switch_tab(0),
+            ink=True,
         )
+        tab_btn_2 = ft.Container(
+            content=ft.Text("CUADRO DE MANDO 2", size=12, weight=ft.FontWeight.BOLD,
+                            color=C_MUTED),
+            bgcolor="#1e3a5f", border_radius=8,
+            padding=ft.Padding(18, 10, 18, 10),
+            on_click=lambda e: switch_tab(1),
+            ink=True,
+        )
+        tabs_row = ft.Row(spacing=10, controls=[tab_btn_1, tab_btn_2])
+
+        def switch_tab(idx: int):
+            state["tab"] = idx
+            tab1_row.visible = (idx == 0)
+            tab2_row.visible = (idx == 1)
+            # Highlight active tab
+            tab_btn_1.bgcolor = C_BLUE if idx == 0 else "#1e3a5f"
+            tab_btn_2.bgcolor = C_BLUE if idx == 1 else "#1e3a5f"
+            tab_btn_1.content.color = "white" if idx == 0 else C_MUTED
+            tab_btn_2.content.color = "white" if idx == 1 else C_MUTED
+            page.update()
 
         # ── Sticky header + scrollable body ──────────────────────────────────
         # header is OUTSIDE the scroll area so it stays visible on mobile
@@ -438,9 +453,11 @@ def main(page: ft.Page):
             scroll=ft.ScrollMode.AUTO,   # only body scrolls
             controls=[
                 ft.Container(content=kpi_row,  padding=ft.Padding(20, 14, 20, 8)),
-                ft.Container(content=tabs_bar,  padding=ft.Padding(16, 4, 16, 4)),
-                ft.Container(content=tab1_row,  padding=ft.Padding(16, 0, 16, 16)),
-                ft.Container(content=tab2_row,  padding=ft.Padding(16, 0, 16, 16)),
+                ft.Container(content=tabs_row,  padding=ft.Padding(16, 8, 16, 8),
+                             bgcolor=C_HEADER,
+                             border=ft.Border(bottom=ft.BorderSide(1, C_BORDER))),
+                ft.Container(content=tab1_row,  padding=ft.Padding(16, 12, 16, 16)),
+                ft.Container(content=tab2_row,  padding=ft.Padding(16, 12, 16, 16)),
             ],
         )
 
