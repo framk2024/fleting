@@ -211,8 +211,13 @@ class SpaceBg(ft.Stack):
                         self._w = float(page.width or 1280)
                         self._h = float(page.height or 800)
                     self._draw()
-                except Exception:
-                    pass
+                except Exception as exc:
+                    # Stop cleanly if the WebSocket has closed
+                    msg = str(exc).lower()
+                    if any(k in msg for k in ("disconnect", "closing", "closed", "invalid state")):
+                        self._running = False
+                        break
+                    # Otherwise silently ignore transient errors
                 time.sleep(0.05)   # 20 fps
 
         threading.Thread(target=_loop, daemon=True).start()
@@ -479,6 +484,7 @@ def main(page: ft.Page):
             ],
         ))
         space.start(page)
+        page.on_disconnect = lambda _: space.stop()  # clean up on browser close
         refresh()
 
     # ── INTRO ──────────────────────────────────────────────────────────────
@@ -544,6 +550,7 @@ def main(page: ft.Page):
             controls=[space, content],
         ))
         space.start(page)
+        page.on_disconnect = lambda _: space.stop()  # clean up on browser close
         page.update()
 
     show_intro()
